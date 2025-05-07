@@ -95,9 +95,19 @@
 }
 
 .gpa-card {
-  @apply bg-white rounded-lg shadow-md p-6 transition-all hover:shadow-lg;
+  @apply bg-card rounded-lg shadow-md p-6 transition-all hover:shadow-lg;
 }
 
 .gpa-gradient {
   @apply bg-gradient-to-r from-gpa-purple to-gpa-dark-purple text-white;
+}
+
+/* Add animation classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
 }

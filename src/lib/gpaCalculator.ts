@@ -1,5 +1,5 @@
 
-export type Grade = 'A' | 'A-' | 'B+' | 'B' | 'B-' | 'C+' | 'C' | 'C-' | 'D+' | 'D' | 'D-' | 'F';
+export type Grade = 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C' | 'D+' | 'D' | 'F';
 
 export interface Course {
   id: string;
@@ -9,22 +9,19 @@ export interface Course {
 }
 
 export const GRADE_POINTS: Record<Grade, number> = {
-  'A': 4.0,
-  'A-': 3.7,
-  'B+': 3.3,
-  'B': 3.0,
-  'B-': 2.7,
-  'C+': 2.3,
-  'C': 2.0,
-  'C-': 1.7,
-  'D+': 1.3,
-  'D': 1.0,
-  'D-': 0.7,
-  'F': 0.0,
+  'A+': 5.0,
+  'A': 4.5,
+  'B+': 4.0,
+  'B': 3.5,
+  'C+': 3.0,
+  'C': 2.5,
+  'D+': 2.0,
+  'D': 1.5,
+  'F': 1.0,
 };
 
 export const GRADE_OPTIONS: Grade[] = [
-  'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F'
+  'A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F'
 ];
 
 export const calculateGPA = (courses: Course[]): number => {

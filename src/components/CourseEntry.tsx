@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Trash } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CourseEntryProps {
   course?: Course;
@@ -32,6 +33,7 @@ export const CourseEntry: React.FC<CourseEntryProps> = ({
   const [name, setName] = useState(course?.name || "");
   const [credits, setCredits] = useState(course?.credits || 3);
   const [grade, setGrade] = useState<Grade>(course?.grade || "A");
+  const isMobile = useIsMobile();
 
   const handleCreditsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
@@ -81,7 +83,7 @@ export const CourseEntry: React.FC<CourseEntryProps> = ({
   };
 
   return (
-    <Card className={`${isNew ? "gpa-gradient" : "gpa-card"} animate-fade-in`}>
+    <Card className={`${isNew ? "gpa-gradient" : ""} animate-fade-in`}>
       <CardContent className="p-4">
         <div className="space-y-4">
           <div>
@@ -138,7 +140,7 @@ export const CourseEntry: React.FC<CourseEntryProps> = ({
 
       <CardFooter className={`flex justify-${isNew ? "center" : "between"} px-4 py-3`}>
         {isNew ? (
-          <Button onClick={handleSave} className="bg-white text-gpa-purple hover:bg-white/90">
+          <Button onClick={handleSave} className={isNew ? "bg-white text-gpa-purple hover:bg-white/90" : ""}>
             Add Course
           </Button>
         ) : (
