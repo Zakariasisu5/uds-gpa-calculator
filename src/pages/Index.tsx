@@ -7,12 +7,14 @@ import { GpaSummary } from "@/components/GpaSummary";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Info } from "lucide-react";
+import { Info, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
 
 const Index = () => {
   const { courses, addCourse, updateCourse, removeCourse, clearAllCourses } = useGpaStorage();
   const isMobile = useIsMobile();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
@@ -27,6 +29,20 @@ const Index = () => {
             </p>
           </div>
           <div className="absolute right-4 top-4 flex items-center gap-2">
+            {user && (
+              <div className="hidden sm:flex items-center mr-2">
+                <span className="text-white text-sm mr-2">Hello, {user.name}</span>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full text-white" 
+                  aria-label="Logout"
+                  onClick={logout}
+                >
+                  <LogOut className="h-[1.2rem] w-[1.2rem]" />
+                </Button>
+              </div>
+            )}
             <Link to="/about">
               <Button variant="ghost" size="icon" className="rounded-full text-white" aria-label="About">
                 <Info className="h-[1.2rem] w-[1.2rem]" />
@@ -36,6 +52,21 @@ const Index = () => {
           </div>
         </div>
       </header>
+      
+      {/* Mobile user info bar */}
+      {user && isMobile && (
+        <div className="container mx-auto px-4 mb-4 flex items-center justify-between bg-card rounded-lg p-2">
+          <span>Hello, {user.name}</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={logout}
+            className="flex items-center"
+          >
+            <LogOut className="h-4 w-4 mr-1" /> Logout
+          </Button>
+        </div>
+      )}
       
       <main className="container mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

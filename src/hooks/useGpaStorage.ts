@@ -2,32 +2,46 @@
 import { useState, useEffect } from "react";
 import { Course, generateId } from "@/lib/gpaCalculator";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
-const LOCAL_STORAGE_KEY = "gpa_calculator_courses";
+const BASE_STORAGE_KEY = "gpa_calculator_courses";
 
 export function useGpaStorage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { user } = useAuth();
+  
+  // Create a user-specific storage key
+  const getStorageKey = () => {
+    return user ? `${BASE_STORAGE_KEY}_${user.id}` : BASE_STORAGE_KEY;
+  };
 
-  // Load courses from local storage on initial render
+  // Load courses from local storage on initial render and when user changes
   useEffect(() => {
-    const savedCourses = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const storageKey = getStorageKey();
+    const savedCourses = localStorage.getItem(storageKey);
+    
     if (savedCourses) {
       try {
         setCourses(JSON.parse(savedCourses));
       } catch (error) {
         console.error("Failed to parse saved courses:", error);
       }
+    } else {
+      // Reset courses when switching users
+      setCourses([]);
     }
+    
     setIsLoaded(true);
-  }, []);
+  }, [user]);
 
   // Save courses to local storage whenever they change
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(courses));
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify(courses));
     }
-  }, [courses, isLoaded]);
+  }, [courses, isLoaded, user]);
 
   const addCourse = (course: Omit<Course, "id">) => {
     const newCourse = { ...course, id: generateId() };
