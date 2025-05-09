@@ -25,6 +25,9 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
   
   // Calculate progress percentage for the progress bar (0-5.0 scale)
   const progressPercentage = Math.min((gpa / 5.0) * 100, 100);
+  
+  // Check if credit requirement is met
+  const hasMinimumCredits = totalCredits >= 3;
 
   return (
     <Card>
@@ -56,6 +59,11 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
           </div>
           <div className="text-xs text-muted-foreground mt-1">
             Degree Classification
+            {!hasMinimumCredits && (
+              <p className="text-xs text-muted-foreground italic mt-1">
+                (Minimum 3 credit hours required)
+              </p>
+            )}
           </div>
         </div>
 

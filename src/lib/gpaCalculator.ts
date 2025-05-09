@@ -60,7 +60,7 @@ export type DegreeClassification =
 
 export const getDegreeClassification = (gpa: number, totalCredits: number): DegreeClassification => {
   // Check if we have enough credits for a classification
-  if (totalCredits < 30) {
+  if (totalCredits < 3) {
     return 'Not Enough Credits';
   }
 
