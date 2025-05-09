@@ -1,6 +1,13 @@
 
 import React from "react";
-import { Course, calculateGPA, formatGPA, getTotalCredits } from "@/lib/gpaCalculator";
+import { 
+  Course, 
+  calculateGPA, 
+  formatGPA, 
+  getTotalCredits,
+  getDegreeClassification,
+  getClassificationColor
+} from "@/lib/gpaCalculator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
@@ -13,21 +20,11 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
   const gpa = calculateGPA(courses);
   const formattedGPA = formatGPA(gpa);
   const totalCredits = getTotalCredits(courses);
+  const classification = getDegreeClassification(gpa, totalCredits);
+  const classificationColor = getClassificationColor(classification);
   
   // Calculate progress percentage for the progress bar (0-5.0 scale)
   const progressPercentage = Math.min((gpa / 5.0) * 100, 100);
-  
-  // Determine color based on GPA
-  const getGpaColor = () => {
-    if (gpa >= 4.5) return "bg-green-500";
-    if (gpa >= 4.0) return "bg-green-400";
-    if (gpa >= 3.5) return "bg-green-300";
-    if (gpa >= 3.0) return "bg-yellow-400";
-    if (gpa >= 2.5) return "bg-yellow-300";
-    if (gpa >= 2.0) return "bg-orange-400";
-    if (gpa >= 1.5) return "bg-orange-300";
-    return "bg-red-500";
-  };
 
   return (
     <Card>
@@ -50,6 +47,16 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
             <span>5.0</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
+        </div>
+
+        {/* Degree Classification */}
+        <div className="text-center border border-border rounded-lg p-3 bg-muted/30">
+          <div className={`text-xl font-semibold ${classificationColor}`}>
+            {classification}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            Degree Classification
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 pt-2">

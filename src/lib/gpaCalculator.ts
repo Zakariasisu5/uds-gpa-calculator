@@ -48,3 +48,46 @@ export const getTotalCredits = (courses: Course[]): number => {
 export const generateId = (): string => {
   return Math.random().toString(36).substring(2, 9);
 };
+
+export type DegreeClassification = 
+  | 'First Class' 
+  | 'Second Class Upper' 
+  | 'Second Class Lower' 
+  | 'Third Class' 
+  | 'Pass' 
+  | 'Fail' 
+  | 'Not Enough Credits';
+
+export const getDegreeClassification = (gpa: number, totalCredits: number): DegreeClassification => {
+  // Check if we have enough credits for a classification
+  if (totalCredits < 30) {
+    return 'Not Enough Credits';
+  }
+
+  if (gpa >= 4.5) return 'First Class';
+  if (gpa >= 3.5) return 'Second Class Upper';
+  if (gpa >= 2.5) return 'Second Class Lower';
+  if (gpa >= 2.0) return 'Third Class';
+  if (gpa >= 1.5) return 'Pass';
+  return 'Fail';
+};
+
+export const getClassificationColor = (classification: DegreeClassification): string => {
+  switch (classification) {
+    case 'First Class':
+      return 'text-green-600 dark:text-green-400';
+    case 'Second Class Upper':
+      return 'text-emerald-600 dark:text-emerald-400';
+    case 'Second Class Lower':
+      return 'text-yellow-600 dark:text-yellow-400';
+    case 'Third Class':
+      return 'text-amber-600 dark:text-amber-400';
+    case 'Pass':
+      return 'text-orange-600 dark:text-orange-400';
+    case 'Fail':
+      return 'text-red-600 dark:text-red-500';
+    case 'Not Enough Credits':
+    default:
+      return 'text-gray-600 dark:text-gray-400';
+  }
+};
