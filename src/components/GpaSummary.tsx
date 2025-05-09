@@ -49,9 +49,9 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
           <Progress value={progressPercentage} className="h-2" />
         </div>
 
-        {/* Degree Classification */}
-        <div className="text-center border border-border rounded-lg p-3 bg-muted/30">
-          <div className={`text-xl font-semibold ${classificationColor}`}>
+        {/* Degree Classification - Enhanced display */}
+        <div className="text-center border border-border rounded-lg p-4 bg-muted/30 shadow-sm">
+          <div className={`text-2xl font-semibold ${classificationColor}`}>
             {classification}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
