@@ -96,12 +96,16 @@ export function useGpaStorage() {
               
             // Then insert all current courses
             if (courses.length > 0) {
+              // Format courses to match student_courses table structure
               const coursesToInsert = courses.map(course => ({
                 id: course.id,
                 user_id: user.id,
                 title: course.name,
                 credit_hours: course.credits,
                 grade: course.grade,
+                semester_id: 'current', // Add required semester_id field
+                code: 'GPA-' + course.id.substring(0, 5), // Add required code field
+                year: new Date().getFullYear().toString() // Add optional year field
               }));
               
               const { error } = await supabase

@@ -4,8 +4,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 
+// Extend the User type to include the metadata we need
+type ExtendedUser = User & {
+  name?: string;
+}
+
 type AuthContextType = {
-  user: User | null;
+  user: ExtendedUser | null;
   session: Session | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, name: string, password: string) => Promise<void>;
@@ -16,7 +21,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,7 +31,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        
+        // Add name from metadata to the user object
+        if (session?.user) {
+          const userData = session.user as ExtendedUser;
+          userData.name = session.user.user_metadata?.name || '';
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
         
         // When the session changes, sync the loading state
         if (event === "SIGNED_IN") {
@@ -40,7 +53,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      
+      // Add name from metadata to the user object
+      if (session?.user) {
+        const userData = session.user as ExtendedUser;
+        userData.name = session.user.user_metadata?.name || '';
+        setUser(userData);
+      } else {
+        setUser(null);
+      }
+      
       setIsLoading(false);
     });
 
