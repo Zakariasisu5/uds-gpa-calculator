@@ -36,8 +36,18 @@ export const CourseEntry: React.FC<CourseEntryProps> = ({
   const isMobile = useIsMobile();
 
   const handleCreditsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow empty string temporarily during editing
+    if (e.target.value === "") {
+      setCredits(0);
+      if (course?.id && onUpdate) {
+        onUpdate(course.id, { credits: 0 });
+      }
+      return;
+    }
+    
+    // Parse the value and ensure it's not negative
     const value = parseFloat(e.target.value);
-    if (value >= 0) {
+    if (!isNaN(value) && value >= 0) {
       setCredits(value);
       if (course?.id && onUpdate) {
         onUpdate(course.id, { credits: value });
@@ -109,8 +119,9 @@ export const CourseEntry: React.FC<CourseEntryProps> = ({
                 type="number"
                 min="0"
                 step="0.5"
-                value={credits}
+                value={credits === 0 ? "" : credits}
                 onChange={handleCreditsChange}
+                placeholder="Enter credits"
                 className={isNew ? "bg-white/10 text-white placeholder:text-white/70 border-white/20" : ""}
               />
             </div>

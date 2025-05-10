@@ -1,4 +1,3 @@
-
 export type Grade = 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C' | 'D+' | 'D' | 'F';
 
 export interface Course {
@@ -25,16 +24,19 @@ export const GRADE_OPTIONS: Grade[] = [
 ];
 
 export const calculateGPA = (courses: Course[]): number => {
-  if (courses.length === 0) {
+  // Filter out courses with zero credits to prevent calculation issues
+  const validCourses = courses.filter(course => course.credits > 0);
+  
+  if (validCourses.length === 0) {
     return 0;
   }
   
-  const totalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
-  const totalPoints = courses.reduce((sum, course) => {
+  const totalCredits = validCourses.reduce((sum, course) => sum + course.credits, 0);
+  const totalPoints = validCourses.reduce((sum, course) => {
     return sum + (course.credits * GRADE_POINTS[course.grade]);
   }, 0);
   
-  return totalPoints / totalCredits;
+  return totalCredits > 0 ? totalPoints / totalCredits : 0;
 };
 
 export const formatGPA = (gpa: number): string => {
