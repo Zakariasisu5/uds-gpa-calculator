@@ -1,3 +1,4 @@
+
 export type Grade = 'A+' | 'A' | 'B+' | 'B' | 'C+' | 'C' | 'D+' | 'D' | 'F';
 
 export interface Course {
@@ -39,6 +40,32 @@ export const calculateGPA = (courses: Course[]): number => {
   return totalCredits > 0 ? totalPoints / totalCredits : 0;
 };
 
+export interface Semester {
+  id: string;
+  name: string;
+  courses: Course[];
+}
+
+// Calculate CGPA across multiple semesters
+export const calculateCGPA = (semesters: Semester[]): number => {
+  // Collect all valid courses from all semesters
+  const allCourses = semesters.flatMap(semester => 
+    semester.courses.filter(course => course.credits > 0)
+  );
+  
+  if (allCourses.length === 0) {
+    return 0;
+  }
+  
+  // Use the same calculation logic as GPA but with all courses
+  const totalCredits = allCourses.reduce((sum, course) => sum + course.credits, 0);
+  const totalPoints = allCourses.reduce((sum, course) => {
+    return sum + (course.credits * GRADE_POINTS[course.grade]);
+  }, 0);
+  
+  return totalCredits > 0 ? totalPoints / totalCredits : 0;
+};
+
 export const formatGPA = (gpa: number): string => {
   return gpa.toFixed(2);
 };
@@ -60,18 +87,34 @@ export type DegreeClassification =
   | 'Fail' 
   | 'Not Enough Credits';
 
-export const getDegreeClassification = (gpa: number, totalCredits: number): DegreeClassification => {
+// Update the classification to be based explicitly on CGPA
+export const getDegreeClassification = (
+  gpa: number, 
+  totalCredits: number, 
+  isCGPA: boolean = false
+): DegreeClassification => {
   // Check if we have enough credits for a classification
   if (totalCredits < 3) {
     return 'Not Enough Credits';
   }
 
-  if (gpa >= 4.5) return 'First Class';
-  if (gpa >= 3.5) return 'Second Class Upper';
-  if (gpa >= 2.5) return 'Second Class Lower';
-  if (gpa >= 2.0) return 'Third Class';
-  if (gpa >= 1.5) return 'Pass';
-  return 'Fail';
+  // Only apply full classification for CGPA, not trimester GPA
+  if (isCGPA) {
+    if (gpa >= 4.5) return 'First Class';
+    if (gpa >= 3.5) return 'Second Class Upper';
+    if (gpa >= 2.5) return 'Second Class Lower';
+    if (gpa >= 2.0) return 'Third Class';
+    if (gpa >= 1.5) return 'Pass';
+    return 'Fail';
+  } else {
+    // For trimester GPA, we just show the equivalent classification but note it's not final
+    if (gpa >= 4.5) return 'First Class';
+    if (gpa >= 3.5) return 'Second Class Upper';
+    if (gpa >= 2.5) return 'Second Class Lower';
+    if (gpa >= 2.0) return 'Third Class';
+    if (gpa >= 1.5) return 'Pass';
+    return 'Fail';
+  }
 };
 
 export const getClassificationColor = (classification: DegreeClassification): string => {

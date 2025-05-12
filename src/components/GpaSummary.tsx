@@ -10,24 +10,45 @@ import {
 } from "@/lib/gpaCalculator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface GpaSummaryProps {
   courses: Course[];
   onClear: () => void;
+  cgpa?: number | null; // Optional CGPA value
+  allCredits?: number; // Total credits across all semesters
 }
 
-export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
+export const GpaSummary: React.FC<GpaSummaryProps> = ({ 
+  courses, 
+  onClear, 
+  cgpa = null,
+  allCredits = 0 
+}) => {
   const gpa = calculateGPA(courses);
   const formattedGPA = formatGPA(gpa);
-  const totalCredits = getTotalCredits(courses);
-  const classification = getDegreeClassification(gpa, totalCredits);
-  const classificationColor = getClassificationColor(classification);
+  const trimesterCredits = getTotalCredits(courses);
+  
+  // Format CGPA if available
+  const formattedCGPA = cgpa !== null ? formatGPA(cgpa) : "N/A";
+  
+  // Classifications
+  const trimesterClassification = getDegreeClassification(gpa, trimesterCredits, false);
+  const trimesterClassColor = getClassificationColor(trimesterClassification);
+  
+  // CGPA classification (only if we have CGPA data)
+  const cgpaClassification = cgpa !== null && allCredits >= 3
+    ? getDegreeClassification(cgpa, allCredits, true)
+    : 'Not Enough Credits';
+  const cgpaClassColor = getClassificationColor(cgpaClassification);
   
   // Calculate progress percentage for the progress bar (0-5.0 scale)
   const progressPercentage = Math.min((gpa / 5.0) * 100, 100);
+  const cgpaProgressPercentage = cgpa !== null ? Math.min((cgpa / 5.0) * 100, 100) : 0;
   
   // Check if credit requirement is met
-  const hasMinimumCredits = totalCredits >= 3;
+  const hasMinimumTrimesterCredits = trimesterCredits >= 3;
+  const hasMinimumCGPACredits = allCredits >= 3;
 
   return (
     <Card>
@@ -35,48 +56,100 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({ courses, onClear }) => {
         <CardTitle className="text-xl font-bold text-center">GPA Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-center">
-          <div className="text-5xl font-bold bg-gradient-to-r from-gpa-purple to-gpa-dark-purple bg-clip-text text-transparent">
-            {formattedGPA}
-          </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            Current GPA
-          </div>
-        </div>
+        <Tabs defaultValue="trimester">
+          <TabsList className="grid grid-cols-2 w-full mb-4">
+            <TabsTrigger value="trimester">Trimester GPA</TabsTrigger>
+            <TabsTrigger value="cgpa">CGPA</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="trimester" className="space-y-4">
+            <div className="text-center">
+              <div className="text-5xl font-bold bg-gradient-to-r from-gpa-purple to-gpa-dark-purple bg-clip-text text-transparent">
+                {formattedGPA}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">
+                Current Trimester GPA
+              </div>
+            </div>
 
-        <div className="relative pt-3">
-          <div className="text-xs font-semibold mb-1 flex justify-between">
-            <span>0.0</span>
-            <span>5.0</span>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
-        </div>
+            <div className="relative pt-3">
+              <div className="text-xs font-semibold mb-1 flex justify-between">
+                <span>0.0</span>
+                <span>5.0</span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+            </div>
 
-        {/* Degree Classification - Enhanced display */}
-        <div className="text-center border border-border rounded-lg p-4 bg-muted/30 shadow-sm">
-          <div className={`text-2xl font-semibold ${classificationColor}`}>
-            {classification}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Degree Classification
-            {!hasMinimumCredits && (
-              <p className="text-xs text-muted-foreground italic mt-1">
-                (Minimum 3 credit hours required)
-              </p>
-            )}
-          </div>
-        </div>
+            {/* Degree Classification - Enhanced display */}
+            <div className="text-center border border-border rounded-lg p-4 bg-muted/30 shadow-sm">
+              <div className={`text-2xl font-semibold ${trimesterClassColor}`}>
+                {trimesterClassification}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Trimester Performance
+                <p className="text-xs text-muted-foreground italic mt-1">
+                  (Equivalent Classification)
+                </p>
+                {!hasMinimumTrimesterCredits && (
+                  <p className="text-xs text-muted-foreground italic mt-1">
+                    (Minimum 3 credit hours required)
+                  </p>
+                )}
+              </div>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          <div className="text-center p-3 bg-gpa-light-blue/40 dark:bg-gpa-light-blue/20 rounded-lg">
-            <div className="text-2xl font-bold">{courses.length}</div>
-            <div className="text-xs text-muted-foreground">Courses</div>
-          </div>
-          <div className="text-center p-3 bg-gpa-soft-green/40 dark:bg-gpa-soft-green/20 rounded-lg">
-            <div className="text-2xl font-bold">{totalCredits}</div>
-            <div className="text-xs text-muted-foreground">Credits</div>
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-4 pt-2">
+              <div className="text-center p-3 bg-gpa-light-blue/40 dark:bg-gpa-light-blue/20 rounded-lg">
+                <div className="text-2xl font-bold">{courses.length}</div>
+                <div className="text-xs text-muted-foreground">Courses</div>
+              </div>
+              <div className="text-center p-3 bg-gpa-soft-green/40 dark:bg-gpa-soft-green/20 rounded-lg">
+                <div className="text-2xl font-bold">{trimesterCredits}</div>
+                <div className="text-xs text-muted-foreground">Credits</div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="cgpa" className="space-y-4">
+            <div className="text-center">
+              <div className="text-5xl font-bold bg-gradient-to-r from-gpa-soft-green to-gpa-dark-green bg-clip-text text-transparent">
+                {formattedCGPA}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">
+                Cumulative GPA
+              </div>
+            </div>
+
+            <div className="relative pt-3">
+              <div className="text-xs font-semibold mb-1 flex justify-between">
+                <span>0.0</span>
+                <span>5.0</span>
+              </div>
+              <Progress value={cgpaProgressPercentage} className="h-2" />
+            </div>
+
+            <div className="text-center border border-border rounded-lg p-4 bg-muted/30 shadow-sm">
+              <div className={`text-2xl font-semibold ${cgpaClassColor}`}>
+                {cgpaClassification}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Degree Classification
+                {!hasMinimumCGPACredits && (
+                  <p className="text-xs text-muted-foreground italic mt-1">
+                    (Minimum 3 credit hours required)
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 pt-2">
+              <div className="text-center p-3 bg-gpa-soft-green/40 dark:bg-gpa-soft-green/20 rounded-lg">
+                <div className="text-2xl font-bold">{allCredits}</div>
+                <div className="text-xs text-muted-foreground">Total Credits</div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {courses.length > 0 && (
           <button 

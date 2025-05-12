@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useGpaStorage } from "@/hooks/useGpaStorage";
 import { CourseEntry } from "@/components/CourseEntry";
@@ -10,11 +10,86 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Info, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+// Fake historical data for CGPA calculation since we don't have proper semester tracking yet
+import { Course } from "@/lib/gpaCalculator";
 
 const Index = () => {
   const { courses, addCourse, updateCourse, removeCourse, clearAllCourses } = useGpaStorage();
   const isMobile = useIsMobile();
   const { user, logout } = useAuth();
+  const [cgpa, setCgpa] = useState<number | null>(null);
+  const [totalCredits, setTotalCredits] = useState<number>(0);
+
+  // Load historical courses to calculate CGPA when component mounts or user changes
+  useEffect(() => {
+    const loadHistoricalData = async () => {
+      if (!user) {
+        // Clear CGPA for non-logged in users
+        setCgpa(null);
+        setTotalCredits(0);
+        return;
+      }
+
+      try {
+        // Get all courses for this user to calculate CGPA
+        const { data: historicalCourses, error } = await supabase
+          .from('student_courses')
+          .select('credit_hours, grade')
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error("Error fetching historical courses:", error);
+          return;
+        }
+
+        // If we have historical data, calculate CGPA
+        if (historicalCourses && historicalCourses.length > 0) {
+          let totalPoints = 0;
+          let totalCreditHours = 0;
+          
+          // Calculate using GPA formula
+          historicalCourses.forEach(course => {
+            const credits = course.credit_hours || 0;
+            if (credits > 0 && course.grade) {
+              // Convert grade string to our Grade type and get points
+              const gradePoints = getGradePoints(course.grade);
+              totalPoints += credits * gradePoints;
+              totalCreditHours += credits;
+            }
+          });
+          
+          // Set CGPA and total credits
+          if (totalCreditHours > 0) {
+            setCgpa(totalPoints / totalCreditHours);
+            setTotalCredits(totalCreditHours);
+          } else {
+            setCgpa(0);
+            setTotalCredits(0);
+          }
+        } else {
+          // No historical data, just use current courses
+          setCgpa(null);
+          setTotalCredits(0);
+        }
+      } catch (error) {
+        console.error("Failed to calculate CGPA:", error);
+      }
+    };
+    
+    loadHistoricalData();
+  }, [user, courses]); // Recalculate when courses or user changes
+
+  // Helper function to convert grade string to grade points
+  const getGradePoints = (grade: string): number => {
+    const gradeMap: Record<string, number> = {
+      'A+': 5.0, 'A': 4.5, 'B+': 4.0, 'B': 3.5, 'C+': 3.0,
+      'C': 2.5, 'D+': 2.0, 'D': 1.5, 'F': 1.0
+    };
+    
+    return gradeMap[grade] || 0;
+  };
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
@@ -72,7 +147,12 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left side: GPA Summary */}
           <div className={`${isMobile ? "order-1" : "lg:col-span-1"}`}>
-            <GpaSummary courses={courses} onClear={clearAllCourses} />
+            <GpaSummary 
+              courses={courses} 
+              onClear={clearAllCourses} 
+              cgpa={cgpa} 
+              allCredits={totalCredits}
+            />
           </div>
           
           {/* Right side: Course entries */}
