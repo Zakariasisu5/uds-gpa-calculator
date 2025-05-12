@@ -11,9 +11,8 @@ import { Info, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-// Fake historical data for CGPA calculation since we don't have proper semester tracking yet
-import { Course } from "@/lib/gpaCalculator";
+import { Course, GRADE_POINTS } from "@/lib/gpaCalculator";
+import { toast } from "sonner";
 
 const Index = () => {
   const { courses, addCourse, updateCourse, removeCourse, clearAllCourses } = useGpaStorage();
@@ -21,6 +20,7 @@ const Index = () => {
   const { user, logout } = useAuth();
   const [cgpa, setCgpa] = useState<number | null>(null);
   const [totalCredits, setTotalCredits] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Load historical courses to calculate CGPA when component mounts or user changes
   useEffect(() => {
@@ -32,6 +32,7 @@ const Index = () => {
         return;
       }
 
+      setIsLoading(true);
       try {
         // Get all courses for this user to calculate CGPA
         const { data: historicalCourses, error } = await supabase
@@ -41,6 +42,7 @@ const Index = () => {
         
         if (error) {
           console.error("Error fetching historical courses:", error);
+          toast.error("Failed to load your course history");
           return;
         }
 
@@ -69,12 +71,36 @@ const Index = () => {
             setTotalCredits(0);
           }
         } else {
-          // No historical data, just use current courses
-          setCgpa(null);
-          setTotalCredits(0);
+          // No historical data, just use current courses for CGPA
+          if (courses.length > 0) {
+            let totalPoints = 0;
+            let totalCreditHours = 0;
+            
+            courses.forEach(course => {
+              const credits = course.credits || 0;
+              if (credits > 0) {
+                totalPoints += credits * GRADE_POINTS[course.grade];
+                totalCreditHours += credits;
+              }
+            });
+            
+            if (totalCreditHours > 0) {
+              setCgpa(totalPoints / totalCreditHours);
+              setTotalCredits(totalCreditHours);
+            } else {
+              setCgpa(0);
+              setTotalCredits(0);
+            }
+          } else {
+            setCgpa(0);
+            setTotalCredits(0);
+          }
         }
       } catch (error) {
         console.error("Failed to calculate CGPA:", error);
+        toast.error("Failed to calculate your CGPA");
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -147,12 +173,21 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left side: GPA Summary */}
           <div className={`${isMobile ? "order-1" : "lg:col-span-1"}`}>
-            <GpaSummary 
-              courses={courses} 
-              onClear={clearAllCourses} 
-              cgpa={cgpa} 
-              allCredits={totalCredits}
-            />
+            {isLoading ? (
+              <div className="h-[400px] flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading your CGPA...</p>
+                </div>
+              </div>
+            ) : (
+              <GpaSummary 
+                courses={courses} 
+                onClear={clearAllCourses} 
+                cgpa={cgpa} 
+                allCredits={totalCredits}
+              />
+            )}
           </div>
           
           {/* Right side: Course entries */}

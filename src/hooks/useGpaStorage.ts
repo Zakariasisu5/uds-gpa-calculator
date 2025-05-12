@@ -96,9 +96,10 @@ export function useGpaStorage() {
               
             // Then insert all current courses
             if (courses.length > 0) {
-              // Format courses to match student_courses table structure
+              // Format courses to match student_courses table structure and generate proper UUIDs
               const coursesToInsert = courses.map(course => ({
-                id: course.id,
+                // Generate UUID compatible with Supabase instead of using the string ID
+                id: crypto.randomUUID(),
                 user_id: user.id,
                 title: course.name,
                 credit_hours: course.credits,

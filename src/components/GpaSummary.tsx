@@ -11,6 +11,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InfoCircle } from "lucide-react";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface GpaSummaryProps {
   courses: Course[];
@@ -50,13 +57,16 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
   const hasMinimumTrimesterCredits = trimesterCredits >= 3;
   const hasMinimumCGPACredits = allCredits >= 3;
 
+  // Determine which tab to show by default (show CGPA if it's available)
+  const defaultTab = cgpa !== null ? "cgpa" : "trimester";
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-xl font-bold text-center">GPA Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Tabs defaultValue="trimester">
+        <Tabs defaultValue={defaultTab}>
           <TabsList className="grid grid-cols-2 w-full mb-4">
             <TabsTrigger value="trimester">Trimester GPA</TabsTrigger>
             <TabsTrigger value="cgpa">CGPA</TabsTrigger>
@@ -82,8 +92,20 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
 
             {/* Degree Classification - Enhanced display */}
             <div className="text-center border border-border rounded-lg p-4 bg-muted/30 shadow-sm">
-              <div className={`text-2xl font-semibold ${trimesterClassColor}`}>
-                {trimesterClassification}
+              <div className="flex items-center justify-center gap-1">
+                <div className={`text-2xl font-semibold ${trimesterClassColor}`}>
+                  {trimesterClassification}
+                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px]">
+                      <p>This shows an equivalent classification based on your current trimester GPA only. Your degree classification is determined by your final CGPA.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 Trimester Performance
@@ -115,8 +137,18 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
               <div className="text-5xl font-bold bg-gradient-to-r from-gpa-soft-green to-gpa-dark-green bg-clip-text text-transparent">
                 {formattedCGPA}
               </div>
-              <div className="text-sm text-muted-foreground mt-1">
-                Cumulative GPA
+              <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
+                <span>Cumulative GPA</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[220px]">
+                      <p>Your CGPA combines all courses across all trimesters/semesters and determines your final degree classification.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
 
@@ -133,10 +165,15 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
                 {cgpaClassification}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
-                Degree Classification
+                <div className="font-semibold">Degree Classification</div>
                 {!hasMinimumCGPACredits && (
                   <p className="text-xs text-muted-foreground italic mt-1">
                     (Minimum 3 credit hours required)
+                  </p>
+                )}
+                {cgpa === null && (
+                  <p className="text-xs text-muted-foreground italic mt-1">
+                    (Log in to track CGPA across all courses)
                   </p>
                 )}
               </div>
