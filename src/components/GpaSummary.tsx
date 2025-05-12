@@ -1,4 +1,3 @@
-
 import React from "react";
 import { 
   Course, 
@@ -11,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
@@ -99,7 +98,7 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-[200px]">
                       <p>This shows an equivalent classification based on your current trimester GPA only. Your degree classification is determined by your final CGPA.</p>
@@ -142,7 +141,7 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-[220px]">
                       <p>Your CGPA combines all courses across all trimesters/semesters and determines your final degree classification.</p>
