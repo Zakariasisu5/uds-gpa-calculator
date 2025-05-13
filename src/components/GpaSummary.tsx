@@ -1,3 +1,4 @@
+
 import React from "react";
 import { 
   Course, 
@@ -13,9 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info } from "lucide-react";
 import { 
   Tooltip,
-  TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip";
 
 interface GpaSummaryProps {
@@ -35,29 +36,29 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
   const formattedGPA = formatGPA(gpa);
   const trimesterCredits = getTotalCredits(courses);
   
-  // Format CGPA if available
-  const formattedCGPA = cgpa !== null ? formatGPA(cgpa) : "N/A";
+  // Format CGPA if available, otherwise calculate from current courses
+  const formattedCGPA = cgpa !== null ? formatGPA(cgpa) : formattedGPA;
   
   // Classifications
   const trimesterClassification = getDegreeClassification(gpa, trimesterCredits, false);
   const trimesterClassColor = getClassificationColor(trimesterClassification);
   
-  // CGPA classification (only if we have CGPA data)
-  const cgpaClassification = cgpa !== null && allCredits >= 3
+  // CGPA classification (only if we have credits data)
+  const cgpaClassification = cgpa !== null 
     ? getDegreeClassification(cgpa, allCredits, true)
-    : 'Not Enough Credits';
+    : getDegreeClassification(gpa, trimesterCredits, true);
   const cgpaClassColor = getClassificationColor(cgpaClassification);
   
   // Calculate progress percentage for the progress bar (0-5.0 scale)
   const progressPercentage = Math.min((gpa / 5.0) * 100, 100);
-  const cgpaProgressPercentage = cgpa !== null ? Math.min((cgpa / 5.0) * 100, 100) : 0;
+  const cgpaProgressPercentage = cgpa !== null ? Math.min((cgpa / 5.0) * 100, 100) : progressPercentage;
   
   // Check if credit requirement is met
   const hasMinimumTrimesterCredits = trimesterCredits >= 3;
   const hasMinimumCGPACredits = allCredits >= 3;
 
   // Determine which tab to show by default (show CGPA if it's available)
-  const defaultTab = cgpa !== null ? "cgpa" : "trimester";
+  const defaultTab = "cgpa";
 
   return (
     <Card>
@@ -170,9 +171,9 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
                     (Minimum 3 credit hours required)
                   </p>
                 )}
-                {cgpa === null && (
+                {cgpa === null && !courses.length && (
                   <p className="text-xs text-muted-foreground italic mt-1">
-                    (Log in to track CGPA across all courses)
+                    (Add courses to calculate your CGPA)
                   </p>
                 )}
               </div>
@@ -180,7 +181,7 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
 
             <div className="grid grid-cols-1 gap-4 pt-2">
               <div className="text-center p-3 bg-gpa-soft-green/40 dark:bg-gpa-soft-green/20 rounded-lg">
-                <div className="text-2xl font-bold">{allCredits}</div>
+                <div className="text-2xl font-bold">{allCredits || trimesterCredits}</div>
                 <div className="text-xs text-muted-foreground">Total Credits</div>
               </div>
             </div>

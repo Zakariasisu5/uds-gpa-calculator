@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useGpaStorage } from "@/hooks/useGpaStorage";
@@ -11,7 +10,7 @@ import { Info, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Course, GRADE_POINTS } from "@/lib/gpaCalculator";
+import { Course, GRADE_POINTS, calculateCGPAFromCourses } from "@/lib/gpaCalculator";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -25,82 +24,77 @@ const Index = () => {
   // Load historical courses to calculate CGPA when component mounts or user changes
   useEffect(() => {
     const loadHistoricalData = async () => {
-      if (!user) {
-        // Clear CGPA for non-logged in users
-        setCgpa(null);
-        setTotalCredits(0);
-        return;
-      }
-
       setIsLoading(true);
       try {
-        // Get all courses for this user to calculate CGPA
-        const { data: historicalCourses, error } = await supabase
-          .from('student_courses')
-          .select('credit_hours, grade')
-          .eq('user_id', user.id);
-        
-        if (error) {
-          console.error("Error fetching historical courses:", error);
-          toast.error("Failed to load your course history");
-          return;
-        }
-
-        // If we have historical data, calculate CGPA
-        if (historicalCourses && historicalCourses.length > 0) {
-          let totalPoints = 0;
-          let totalCreditHours = 0;
+        if (user) {
+          // Get all courses for this user to calculate CGPA
+          const { data: historicalCourses, error } = await supabase
+            .from('student_courses')
+            .select('credit_hours, grade')
+            .eq('user_id', user.id);
           
-          // Calculate using GPA formula
-          historicalCourses.forEach(course => {
-            const credits = course.credit_hours || 0;
-            if (credits > 0 && course.grade) {
-              // Convert grade string to our Grade type and get points
-              const gradePoints = getGradePoints(course.grade);
-              totalPoints += credits * gradePoints;
-              totalCreditHours += credits;
-            }
-          });
-          
-          // Set CGPA and total credits
-          if (totalCreditHours > 0) {
-            setCgpa(totalPoints / totalCreditHours);
-            setTotalCredits(totalCreditHours);
-          } else {
-            setCgpa(0);
-            setTotalCredits(0);
+          if (error) {
+            console.error("Error fetching historical courses:", error);
+            toast.error("Failed to load your course history");
+            
+            // Fall back to current courses only
+            calculateLocalCGPA();
+            return;
           }
-        } else {
-          // No historical data, just use current courses for CGPA
-          if (courses.length > 0) {
+
+          // If we have historical data, calculate CGPA
+          if (historicalCourses && historicalCourses.length > 0) {
             let totalPoints = 0;
             let totalCreditHours = 0;
             
-            courses.forEach(course => {
-              const credits = course.credits || 0;
-              if (credits > 0) {
-                totalPoints += credits * GRADE_POINTS[course.grade];
+            // Calculate using GPA formula
+            historicalCourses.forEach(course => {
+              const credits = course.credit_hours || 0;
+              if (credits > 0 && course.grade) {
+                // Convert grade string to our Grade type and get points
+                const gradePoints = getGradePoints(course.grade);
+                totalPoints += credits * gradePoints;
                 totalCreditHours += credits;
               }
             });
             
+            // Set CGPA and total credits
             if (totalCreditHours > 0) {
               setCgpa(totalPoints / totalCreditHours);
               setTotalCredits(totalCreditHours);
             } else {
-              setCgpa(0);
-              setTotalCredits(0);
+              calculateLocalCGPA();
             }
           } else {
-            setCgpa(0);
-            setTotalCredits(0);
+            // No historical data, just use current courses for CGPA
+            calculateLocalCGPA();
           }
+        } else {
+          // Not logged in, just use current courses
+          calculateLocalCGPA();
         }
       } catch (error) {
         console.error("Failed to calculate CGPA:", error);
         toast.error("Failed to calculate your CGPA");
+        
+        // Fall back to current courses
+        calculateLocalCGPA();
       } finally {
         setIsLoading(false);
+      }
+    };
+    
+    // Calculate CGPA using only current local courses
+    const calculateLocalCGPA = () => {
+      if (courses.length > 0) {
+        const localCgpa = calculateCGPAFromCourses(courses);
+        const totalLocalCredits = courses.reduce((sum, course) => sum + course.credits, 0);
+        
+        setCgpa(localCgpa);
+        setTotalCredits(totalLocalCredits);
+      } else {
+        setCgpa(0);
+        setTotalCredits(0);
       }
     };
     
