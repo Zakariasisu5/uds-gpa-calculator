@@ -58,7 +58,7 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
   const hasMinimumCGPACredits = allCredits >= 3;
 
   // Determine which tab to show by default (show CGPA if it's available)
-  const defaultTab = "trimesterCredits";
+  const defaultTab = "cgpa";
 
   return (
     <Card>
