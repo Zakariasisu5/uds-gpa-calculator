@@ -134,7 +134,7 @@ export const GpaSummary: React.FC<GpaSummaryProps> = ({
 
           <TabsContent value="cgpa" className="space-y-4">
             <div className="text-center">
-              <div className="text-5xl font-bold bg-gradient-to-r from-gpa-green to-gpa-dark-green bg-clip-text text-transparent">
+              <div className="text-5xl font-bold bg-gradient-to-r from-gpa-purple to-gpa-dark-purple bg-clip-text text-transparent">
                 {formattedCGPA}
               </div>
               <div className="text-sm text-muted-foreground mt-1 flex items-center justify-center gap-1">
